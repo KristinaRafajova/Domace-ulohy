@@ -1,0 +1,96 @@
+Napíšte funkciu s nasledujúcou signatúrou
+
+combin <- function(n,k)
+{
+	...
+}
+ktorá vracia kombinačné číslo $$ n \choose k $$ Návod: Skúste implementáciu urobiť tak, aby ste nemuseli počítať faktoriály - to je veľmi neefektívne.
+
+ODPOVEĎ:
+
+
+```{r}
+combin <- function(n,k)
+{
+  if (n<k)
+    return("n je mensie ako k, Zadaj n vacsie ako k")
+  else
+    return(factorial(n)/(factorial(n-k)*factorial(k)))
+}
+
+
+combin(2,3)
+combin(3,2)
+
+```
+
+Predstavte si, že v R nemáme funkciu sqrt a napíšte funkciu, ktorá vráti odhad odmocniny x. Môžete využiť napríklad iteratívny vzťah $$ a_{n+1} = \frac{1}{2}\left(a_n + \frac{x}{a_n}\right) $$​ Tento vzťah pochádza z riešenia rovnice $x-a^2=0$ Newtonovou metódou a iterácie dobre konvergujú. Odhadnite presnosť výsledku.
+
+ODPOVEĎ:
+
+```{r}
+
+odmocnina <- function(x){
+a <- 1
+tol <- 1e-10
+repeat{
+  a <- 0.5 * (x / a + a)
+  if 
+  (abs(a * a - x) < tol)
+  break
+}
+a
+}
+
+odmocnina(20)
+odmocnina(10)
+```
+
+Napíšte funkciu s nasledujúcou signatúrou
+
+integ <- function(f, a, b)
+{
+	...    
+}
+ktorá vypočíta odhad určitého integrálu $$ \int_a^b f(x)dx $$ a jeho chybu - teda vracia dve hodnoty. Toto sa v R robí tak, že vrátite zoznam r, pričom r$integral bude hodnota a r$error jej chyba.
+
+ODPOVEĎ:
+
+```{r}
+
+integ <- function(f, a, b)
+{
+  f<-function(x){x^4*sin(x)}
+  return(integrate (f,lower=a,upper=b))
+}
+
+integ(x^4*sin(x),2,3)
+
+```
+
+Napíšte funkciu so signatúrou
+
+clear.dia <- function(s)
+{
+  return(stri_trans_general(x, "Latin-ASCII")
+}
+ktorá nahradí znaky s diakritikou v textovom reťazci príslušnými znakmi bez diakritiky, teda napríklad Čučoriedka -> Cucoriedka
+
+Návod: Najjednoduchšie je použiť prekladový "slovník" pre náhradu znakov.
+
+ODPOVEĎ:
+
+```{r}
+library(stringi)
+clear.dia <- function(s)
+{
+  stri_trans_general(s, "Latin-ASCII")
+}
+
+clear.dia("Pekný deň Vám prajem")
+```
+
+
+U každej funkcie ilustrujte na rozumnom počte príkladov, že vaša implementácia funguje. Nepotrebujem žiadne extra precízne či efektívne implementácie, iba niečo, čo v zásade funguje.
+
+Riešenia poprosím do víkendu pred budúcim cvičením, teda do 15. októbra vo forme odkazu na .Rmd súbor vo vašom GitHub repozitári.
