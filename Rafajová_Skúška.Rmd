@@ -1,0 +1,116 @@
+---
+title: "Skúška"
+author: "Kristína Rafajová"
+date: "1/29/2022"
+output: html_document
+---
+Ako dáta som zvolila dataset v programe R s názvom Seatbelts. Pre jednoduchšie prezeranie je potrebné naformátovať súbor údajov Seatbelts.
+Tiež pre jednoduchšiu prácu s datasetom som si tento dataset premenovala na mojedata. 
+
+```{r}
+data(Seatbelts)
+Seatbelts <- data.frame(Year=floor(time(Seatbelts)),Month=factor(cycle(Seatbelts),labels=month.abb),Seatbelts)
+mojedata<-Seatbelts
+str(mojedata)
+View(mojedata)
+```
+Dataset mojedata má 192 pozorovaní a 10 premenných - z toho 8 je typu numeric, jedna time-series a jedna premenná je typu factor. 
+
+```{r}
+mojedata$law<-factor(mojedata$law)
+names(mojedata)<-c("Rok","Mesiac","Mvodici","Vodici","vpredu","vzadu","kms","CenaBenzínu","MDodávka","zakon")
+```
+Názvy premenných som si premenovala na slovenské názvy. Pričom premenná "Mvodiči" predstavuje usmrtených vodičov, premenná "Vodiči" celkový počet vodičov zranených alebo usmrtených, "vpredu" cestujúcich sediacich na predných sedadlách, ktorý boli usmrtení alebo vážne zranení a "vzadu" na zadných sedadlách. Premenná "kms" predstavuje prejdenú vzdialenosť v km/s a "MDodávka", počet usmrtených vodičov riadiacich dodávku. Premenná "zakon" môže nadobúdať dve hodnoty 0 a 1. Hodnota 0 zodpovedá stavu, keď ešte nebol v platnosti zákon o bezpečnostných pásoch a hodnota 1, ak už v platnosti bol.
+
+Ako prvý graf som si urobila boxplot závislosti počtu zomrelých vodičov od roku. Zákon o bezpečnostných pásoch bol do platnosti zavedený 31.januára 1983. Z grafu môžeme vidieť po zavedení zákona v roku 1983 sa počet zomrelých vodičov na cestách mierne znižuje, ale celkovo sme nezaznamenali výraznejší vplyv roku na počet úmrtí.. 
+```{r}
+mojedata$Rok<-factor(mojedata$Rok)
+plot(Mvodici~Rok,mojedata,col='gold')
+```
+Aby sme zistili,či má na počet zomrelých vodičov vplyv aj počasie a teda mesiac, urobili sme graf závislosti počtu mŕtvych vodičov od mesiaca. Z grafu môžeme vidieť, že celkom viditeľne počet mŕtvych stúpa smerom k zimným mesiacom. 
+```{r}
+plot(Mvodici~Mesiac,mojedata,col='blue')
+```
+
+
+Dáta sme si rozdelili do dvoch podskupín Zákon0, ktorá je súhrnom dát pred zavedením zákona o bezpečnostných pásoch a skupina Zákon1 je zodpovedá dátam po zavedení zákona o bezpečnostných pásoch.
+
+```{r}
+library(stats)
+Zakon0<-filter(mojedata,zakon==0)
+Zakon1<-filter(mojedata,zakon!=0)
+
+```
+Tiež sme urobili sumárnu štatistiku každej podskupiny.
+```{r}
+summary(Zakon0)
+summary(Zakon1)
+```
+Tiež sme vypočítali štandardnú odchýlku každej podskupiny (pred a po zavedení zákona).
+```{r}
+sd(Zakon0$Mvodici)
+sd(Zakon1$Mvodici)
+```
+
+```{r}
+plot(Mvodici~zakon,mojedata,col='magenta')
+```
+Zo súhrnnej štatistiky, ako aj z uvedeného boxplotu môžeme vidieť, že po zavedení legislatívy zákona o povinnosti predných bezpečnostných pásoch počet usmrtených vodičov klesol.
+
+Dáta o celkovom počte usmrtených vodičov pred a po zavedení legislatívy sme overili z hľadiska ich normálnosti.
+```{r}
+shapiro.test(mojedata$Mvodici)
+```
+P-hodnota je menšia ako 0.05, nulová hypotéza bola preto zamietnutá a dáta nie sú normálne rozdelené. Použijeme preto neparametrické testy, ako napríklad Wilcoxon test.
+
+```{r}
+wilcox.test (mojedata$Mvodici ~mojedata$zakon)
+```
+P-hodnota z Wilcoxon testu je menšia ako 0.05 takže počet usmrtených vodičov pred zavedením zákona sa značne líši (je signifikatne odlišný) od počtu mŕtvych vodičov po zavedení zákona.
+
+Tiež sme pozorovali vplyv ceny benzínu na počet mŕtvych vodičov.
+
+
+```{r}
+library(ggplot2)
+ggplot (Zakon0, aes(x = CenaBenzínu, y= Mvodici))+geom_point(size = 2, shape = 20, col="magenta") +stat_smooth (method = lm)+ xlab("Cena Benzínu") + ylab (" Mortalita vodičov")
+```
+Z korelačnej krivky závislosti mortality vodičov od ceny benzínu môžeme vidieť, že mortalita vodičov mierne klesá so zvyšovaním ceny benzínu.
+
+```{r}
+cor.test(Zakon0$Mvodici,Zakon0$CenaBenzínu)
+```
+Hodnota -0.312 hovorí o slabom negatívnom vzťahu medzi týmito dvomi premennými. Teda zo zvyšovaním ceny benzínu klesá počet usmrtených vodičov.
+
+```{r}
+#súčet všetkých vodičov, mŕtvych vodičov, cestujúcich na prednom sedadle a na zadných sedadlách pre zavedením platnosti zákona
+Vodici0<-sum(Zakon0$Vodici)
+Mvodici0<-sum(Zakon0$Mvodici)
+vpredu0<-sum(Zakon0$vpredu)
+vzadu0<-sum(Zakon0$vzadu)
+
+#súčet všetkých vodičov, mŕtvych vodičov, cestujúcich na prednom sedadle a na zadných sedadlách po zavedením platnosti zákona
+Vodici1<-sum(Zakon1$Vodici)
+Mvodici1<-sum(Zakon1$Mvodici)
+vpredu1<-sum(Zakon1$vpredu)
+vzadu1<-sum(Zakon1$vzadu)
+
+sucty<-matrix(c(Vodici0,Vodici1,vpredu0,vpredu1,vzadu0,vzadu1),ncol=3)
+View(sucty)
+tabulka<-prop.table(sucty,margin=1)
+
+colnames(tabulka) <- c("Vodiči", "cestujúci vpredu", "cestujúci vzadu")
+rownames (tabulka) <-c ("Pred zavedením zákona", "Po zavedení zákona")
+View(tabulka)
+```
+
+Z tabuľky môžeme vidieť, že proporcie usmrtených vodičov pred a po zavedení zákona sa len mierne líšili. Počet zranených alebo usmrtených pasažierov sediacich vpredu po zavedení zákona mierne klesol, avšak počet pasažierov sediacich vzadu mierne stúpol.Zistené informácie sme tiež zobrazili v grafe s názvom Mortalita vodičov a pasažierov.
+
+```{r}
+barplot(as.matrix(tabulka),main= "Mortalita vodičov a pasažierov", ylab = "Platnosť zákona",space=0.3, cex.axis=0.8, col= c("blue","magenta"))
+legend("topright", c("Pred zavedením zákona", "Po zavedení zákona"), fill=c("blue","magenta"))+theme_bw()
+```
+
+
+
+
